@@ -74,6 +74,101 @@ AND POPULATION > 200000;
 SELECT CITY, STATE
 FROM STATION;
 
+-- ===============================
+-- WEATHER OBSERVATION STATION 2
+-- ===============================
+-- Problem: Sum of LAT_N and LONG_W rounded to 2 decimal places
+
+SELECT 
+    ROUND(SUM(LAT_N), 2) AS total_lat,
+    ROUND(SUM(LONG_W), 2) AS total_long
+FROM STATION;
+
+
+
+-- ===============================
+-- WEATHER OBSERVATION STATION 13
+-- ===============================
+-- Problem: Sum of LAT_N between given range, truncated to 4 decimal places
+
+SELECT 
+    TRUNCATE(SUM(LAT_N), 4) AS total_lat
+FROM STATION
+WHERE LAT_N > 38.7880 
+  AND LAT_N < 137.2345;
+
+-- Weather Observation Station 14
+-- Find max LAT_N < 137.2345 (truncate to 4 decimals)
+
+SELECT TRUNCATE(MAX(LAT_N), 4)
+FROM STATION
+WHERE LAT_N < 137.2345;
+
+
+-- Weather Observation Station 15
+-- Get LONG_W for largest LAT_N < 137.2345
+
+SELECT ROUND(LONG_W, 4)
+FROM STATION
+WHERE LAT_N = (
+    SELECT MAX(LAT_N)
+    FROM STATION
+    WHERE LAT_N < 137.2345
+);
+
+
+-- Weather Observation Station 16
+-- Find smallest LAT_N greater than 38.7780 (rounded to 4 decimal places)
+
+SELECT ROUND(MIN(LAT_N), 4)
+FROM STATION
+WHERE LAT_N > 38.7780;
+
+
+-- Weather Observation Station 17
+-- Query the Western Longitude (LONG_W) for the largest Northern Latitude (LAT_N)
+-- in STATION that is greater than 38.7780. Round your answer to 4 decimal places.
+
+SELECT ROUND(LONG_W, 4)
+FROM STATION
+WHERE LAT_N = (
+    SELECT MIN(LAT_N)
+    FROM STATION
+    WHERE LAT_N > 38.7780
+);
+
+
+-- Weather Station 18
+SELECT 
+ROUND(
+    ABS(MIN(LAT_N) - MAX(LAT_N)) + 
+    ABS(MIN(LONG_W) - MAX(LONG_W))
+, 4)
+FROM STATION;
+
+
+-- Weather Observation Station 19
+SELECT 
+ROUND(
+    SQRT(
+        POWER(MAX(LAT_N) - MIN(LAT_N), 2) +
+        POWER(MAX(LONG_W) - MIN(LONG_W), 2)
+    ), 
+4)
+FROM STATION;
+
+
+-- Weather Observation Station 20 (Median)
+SELECT ROUND(LAT_N, 4)
+FROM (
+    SELECT LAT_N,
+           ROW_NUMBER() OVER (ORDER BY LAT_N) AS rn,
+           COUNT(*) OVER () AS total
+    FROM STATION
+) AS t
+WHERE rn = CEIL(total / 2);
+
+
 
 -- 10: Get CITY names with even ID numbers (no duplicates)
 -- Concept: DISTINCT + MOD function (filtering even numbers)
