@@ -65,3 +65,69 @@ AND w.coins_needed = (
     AND wp2.age = wp.age
 )
 ORDER BY w.power DESC, wp.age DESC;
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+Print `hacker_id`, `name`, and the total number of challenges created by each hacker.
+
+## ⚙️ Conditions
+- Sort by total challenges **DESC**
+- If tie → sort by `hacker_id` **ASC**
+- If multiple hackers have the **same count** and it is **not the maximum count**, **exclude** them
+
+SELECT h.hacker_id, h.name, COUNT(c.challenge_id) AS total
+FROM Hackers h
+JOIN Challenges c
+ON h.hacker_id = c.hacker_id
+GROUP BY h.hacker_id, h.name
+HAVING total IN (
+    SELECT total
+    FROM (
+        SELECT COUNT(c2.challenge_id) AS total
+        FROM Challenges c2
+        GROUP BY c2.hacker_id
+    ) t
+    GROUP BY total
+    HAVING COUNT(*) = 1
+)
+OR total = (
+    SELECT MAX(cnt)
+    FROM (
+        SELECT COUNT(challenge_id) AS cnt
+        FROM Challenges
+        GROUP BY hacker_id
+    ) x
+)
+ORDER BY total DESC, h.hacker_id;
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+-- Problem5: Contest Leaderboard
+-- Concepts: JOIN, GROUP BY, SUBQUERY, AGGREGATION
+
+
+Problem Summary:
+Calculate total score of each hacker.
+
+Rules:
+1. For each challenge, take MAX(score)
+2. Sum all max scores per hacker
+3. Exclude hackers with total score = 0
+4. Sort by:
+   - total_score DESC
+   - hacker_id ASC
+
+
+SELECT h.hacker_id, h.name, SUM(s.max_score) AS total_score
+FROM Hackers h
+JOIN (
+    SELECT hacker_id, challenge_id, MAX(score) AS max_score
+    FROM Submissions
+    GROUP BY hacker_id, challenge_id
+) s
+ON h.hacker_id = s.hacker_id
+GROUP BY h.hacker_id, h.name
+HAVING total_score > 0
+ORDER BY total_score DESC, h.hacker_id ASC;
