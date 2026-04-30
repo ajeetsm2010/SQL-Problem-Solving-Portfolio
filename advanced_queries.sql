@@ -124,29 +124,105 @@ SELECT
     c.contest_id,
     c.hacker_id,
     c.name,
-    SUM(s.total_submissions) AS total_submissions,
-    SUM(s.total_accepted_submissions) AS total_accepted_submissions,
-    SUM(v.total_views) AS total_views,
-    SUM(v.total_unique_views) AS total_unique_views
+    COALESCE(SUM(ss.total_submissions), 0),
+    COALESCE(SUM(ss.total_accepted_submissions), 0),
+    COALESCE(SUM(vs.total_views), 0),
+    COALESCE(SUM(vs.total_unique_views), 0)
 FROM Contests c
+
 JOIN Colleges col 
     ON c.contest_id = col.contest_id
+
 JOIN Challenges ch 
     ON col.college_id = ch.college_id
-LEFT JOIN Submission_Stats s 
-    ON ch.challenge_id = s.challenge_id
-LEFT JOIN View_Stats v 
-    ON ch.challenge_id = v.challenge_id
+
+LEFT JOIN (
+    SELECT 
+        challenge_id,
+        SUM(total_submissions) AS total_submissions,
+        SUM(total_accepted_submissions) AS total_accepted_submissions
+    FROM Submission_Stats
+    GROUP BY challenge_id
+) ss
+ON ch.challenge_id = ss.challenge_id
+
+LEFT JOIN (
+    SELECT 
+        challenge_id,
+        SUM(total_views) AS total_views,
+        SUM(total_unique_views) AS total_unique_views
+    FROM View_Stats
+    GROUP BY challenge_id
+) vs
+ON ch.challenge_id = vs.challenge_id
+
 GROUP BY c.contest_id, c.hacker_id, c.name
+
 HAVING 
-    SUM(s.total_submissions) > 0 OR
-    SUM(s.total_accepted_submissions) > 0 OR
-    SUM(v.total_views) > 0 OR
-    SUM(v.total_unique_views) > 0
+    COALESCE(SUM(ss.total_submissions), 0) +
+    COALESCE(SUM(ss.total_accepted_submissions), 0) +
+    COALESCE(SUM(vs.total_views), 0) +
+    COALESCE(SUM(vs.total_unique_views), 0) > 0
+
 ORDER BY c.contest_id;
 
 
+----------------------------------------------------------------------------------------------------------------------------------------------
+/*
+Problem: 15 Days of Learning SQL
+Platform: HackerRank
+Difficulty: Hard
+*/
 
+WITH daily_submissions AS (
+    SELECT 
+        submission_date,
+        hacker_id,
+        COUNT(*) AS sub_count
+    FROM submissions
+    GROUP BY submission_date, hacker_id
+),
+
+continuous_hackers AS (
+    SELECT ds1.submission_date, ds1.hacker_id
+    FROM daily_submissions ds1
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM daily_submissions ds2
+        WHERE ds2.hacker_id = ds1.hacker_id
+        AND ds2.submission_date < ds1.submission_date
+        AND ds2.submission_date NOT IN (
+            SELECT submission_date
+            FROM daily_submissions
+            WHERE hacker_id = ds1.hacker_id
+        )
+    )
+),
+
+max_submissions AS (
+    SELECT 
+        submission_date,
+        hacker_id,
+        sub_count,
+        RANK() OVER (PARTITION BY submission_date 
+                     ORDER BY sub_count DESC, hacker_id ASC) AS rnk
+    FROM daily_submissions
+)
+
+SELECT 
+    d.submission_date,
+    COUNT(DISTINCT c.hacker_id) AS unique_hackers,
+    m.hacker_id,
+    h.name
+FROM (SELECT DISTINCT submission_date FROM submissions) d
+LEFT JOIN continuous_hackers c 
+    ON d.submission_date = c.submission_date
+LEFT JOIN max_submissions m 
+    ON d.submission_date = m.submission_date AND m.rnk = 1
+JOIN hackers h 
+    ON m.hacker_id = h.hacker_id
+GROUP BY d.submission_date, m.hacker_id, h.name
+ORDER BY d.submission_date;
 
 
 
