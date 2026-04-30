@@ -170,64 +170,42 @@ ORDER BY c.contest_id;
 ----------------------------------------------------------------------------------------------------------------------------------------------
 /*
 Problem: 15 Days of Learning SQL
-Concept: CTE+ Window Functions + Logic
+Concept: Subquery + Continuos logic
 */
 
-WITH daily_submissions AS (
-    SELECT 
-        submission_date,
-        hacker_id,
-        COUNT(*) AS sub_count
-    FROM submissions
-    GROUP BY submission_date, hacker_id
-),
-
-continuous_hackers AS (
-    SELECT ds1.submission_date, ds1.hacker_id
-    FROM daily_submissions ds1
-    WHERE NOT EXISTS (
-        SELECT 1
-        FROM daily_submissions ds2
-        WHERE ds2.hacker_id = ds1.hacker_id
-        AND ds2.submission_date < ds1.submission_date
-        AND ds2.submission_date NOT IN (
-            SELECT submission_date
-            FROM daily_submissions
-            WHERE hacker_id = ds1.hacker_id
-        )
-    )
-),
-
-max_submissions AS (
-    SELECT 
-        submission_date,
-        hacker_id,
-        sub_count,
-        RANK() OVER (PARTITION BY submission_date 
-                     ORDER BY sub_count DESC, hacker_id ASC) AS rnk
-    FROM daily_submissions
-)
-
 SELECT 
-    d.submission_date,
-    COUNT(DISTINCT c.hacker_id) AS unique_hackers,
-    m.hacker_id,
-    h.name
-FROM (SELECT DISTINCT submission_date FROM submissions) d
-LEFT JOIN continuous_hackers c 
-    ON d.submission_date = c.submission_date
-LEFT JOIN max_submissions m 
-    ON d.submission_date = m.submission_date AND m.rnk = 1
-JOIN hackers h 
-    ON m.hacker_id = h.hacker_id
-GROUP BY d.submission_date, m.hacker_id, h.name
-ORDER BY d.submission_date;
-
-
-
-
-
-
-
-
-
+    submission_date,
+    (
+        SELECT COUNT(DISTINCT s1.hacker_id)
+        FROM Submissions s1
+        WHERE s1.submission_date = s.submission_date
+        AND (
+            SELECT COUNT(DISTINCT s2.submission_date)
+            FROM Submissions s2
+            WHERE s2.hacker_id = s1.hacker_id
+            AND s2.submission_date < s.submission_date
+        ) = DATEDIFF(s.submission_date, '2016-03-01')
+    ) AS consistent_count,
+    (
+        SELECT hacker_id
+        FROM Submissions s3
+        WHERE s3.submission_date = s.submission_date
+        GROUP BY hacker_id
+        ORDER BY COUNT(submission_id) DESC, hacker_id ASC
+        LIMIT 1
+    ) AS leader_id,
+    (
+        SELECT name
+        FROM Hackers
+        WHERE hacker_id = (
+            SELECT hacker_id
+            FROM Submissions s4
+            WHERE s4.submission_date = s.submission_date
+            GROUP BY hacker_id
+            ORDER BY COUNT(submission_id) DESC, hacker_id ASC
+            LIMIT 1
+        )
+    ) AS leader_name
+FROM (SELECT DISTINCT submission_date FROM Submissions) s
+ORDER BY submission_date;
+        
