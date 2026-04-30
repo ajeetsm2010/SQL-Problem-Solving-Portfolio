@@ -21,3 +21,14 @@ ON F1.X = F2.Y AND F1.Y = F2.X
 WHERE F1.X <= F1.Y
 ORDER BY F1.X;
 
+-- 3. Binary Tree Nodes
+
+SELECT 
+    N,
+    CASE
+        WHEN P IS NULL THEN 'Root'
+        WHEN N NOT IN (SELECT P FROM BST WHERE P IS NOT NULL) THEN 'Leaf'
+        ELSE 'Inner'
+    END
+FROM BST
+ORDER BY N;
