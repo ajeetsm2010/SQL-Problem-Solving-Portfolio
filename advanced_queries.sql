@@ -170,8 +170,7 @@ ORDER BY c.contest_id;
 ----------------------------------------------------------------------------------------------------------------------------------------------
 /*
 Problem: 15 Days of Learning SQL
-Platform: HackerRank
-Difficulty: Hard
+Concept: CTE+ Window Functions + Logic
 */
 
 WITH daily_submissions AS (
