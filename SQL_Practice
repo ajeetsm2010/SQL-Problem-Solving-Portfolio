@@ -1,0 +1,67 @@
+Average Population of Each Continent
+-----------------------------------
+Problem1: Calculate average population per continent
+
+Concepts:
+- JOIN
+- GROUP BY
+- AVG
+- FLOOR
+
+Solution:
+SELECT COUNTRY.CONTINENT, FLOOR(AVG(CITY.POPULATION))
+FROM CITY
+JOIN COUNTRY
+ON CITY.COUNTRYCODE = COUNTRY.CODE
+GROUP BY COUNTRY.CONTINENT;
+Learned:
+- How GROUP BY works with JOIN
+- Why FLOOR is needed
+
+-------------------------------------------------------------------------------------------------------------------------
+-- Problem2: Top Competitors (HackerRank)
+
+-- Objective:
+-- Find hackers who achieved full scores in more than 1 challenge
+
+-- Concepts Used:
+-- JOIN, GROUP BY, HAVING, COUNT DISTINCT
+
+SELECT h.hacker_id, h.name
+FROM Hackers h
+JOIN Submissions s 
+ON h.hacker_id = s.hacker_id
+JOIN Challenges c 
+ON s.challenge_id = c.challenge_id
+WHERE s.score = c.max_score
+GROUP BY h.hacker_id, h.name
+HAVING COUNT(DISTINCT s.challenge_id) > 1
+ORDER BY COUNT(DISTINCT s.challenge_id) DESC, h.hacker_id ASC;
+
+-- Learnings:
+-- 1. HAVING is used after GROUP BY
+-- 2. COUNT(DISTINCT) avoids duplicates
+-- 3. Multi-level sorting in ORDER BY
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+-- Problem3: Ollivander's Inventory
+-- Platform: HackerRank
+-- Concept: JOIN + Subquery
+
+SELECT w.id, wp.age, w.coins_needed, w.power
+FROM Wands w
+JOIN Wands_Property wp
+ON w.code = wp.code
+WHERE wp.is_evil = 0
+AND w.coins_needed = (
+    SELECT MIN(w2.coins_needed)
+    FROM Wands w2
+    JOIN Wands_Property wp2
+    ON w2.code = wp2.code
+    WHERE wp2.is_evil = 0
+    AND w2.power = w.power
+    AND wp2.age = wp.age
+)
+ORDER BY w.power DESC, wp.age DESC;
