@@ -14,24 +14,6 @@ The focus is on solving practical problems relevant to Business Analyst and Data
 - Subqueries & CTEs
 - Business Insights from Data
 
----
-
-## 📊 Case Studies
-
-### 1. E-commerce Sales Analysis
-- Identified top-selling products
-- Analyzed revenue trends
-- Found high-value customers
-
-### 2. Customer Retention Analysis
-- Measured repeat customers
-- Identified churn patterns
-- Suggested retention strategies
-
-### 3. Business Performance Insights
-- Monthly revenue tracking
-- Category-wise performance
-- Profitability insights
 
 ---
 
